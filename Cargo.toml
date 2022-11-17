@@ -1,6 +1,9 @@
 [package]
 name = "topgrade"
-description = "Upgrade all the things"
+description = """
+topgrade detects which tools you use and runs the appropriate commands to update them.
+(this is a fork of topgrade by r-darwish to keep it maintained)
+"""
 categories = ["os"]
 keywords = ["upgrade", "update"]
 license-file = "LICENSE"
