@@ -1,4 +1,7 @@
 #![allow(dead_code)]
+
+pub mod remote;
+
 use anyhow::Context;
 use anyhow::Result;
 use clap::{ArgEnum, Parser};
@@ -14,6 +17,8 @@ use std::{env, fs};
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
 use sys_info::hostname;
 use which_crate::which;
+
+use self::remote::Remote;
 
 use super::utils::editor;
 
@@ -273,6 +278,7 @@ pub struct ConfigFile {
     predefined_git_repos: Option<bool>,
     disable: Option<Vec<Step>>,
     ignore_failures: Option<Vec<Step>>,
+    remotes: Option<Vec<Remote>>,
     remote_topgrades: Option<Vec<String>>,
     remote_topgrade_path: Option<String>,
     ssh_arguments: Option<String>,
@@ -527,6 +533,14 @@ impl Config {
         check_deprecated!(config_file, predefined_git_repos, git, pull_predefined);
         check_deprecated!(config_file, yay_arguments, linux, yay_arguments);
         check_deprecated!(config_file, accept_all_windows_updates, windows, accept_all_updates);
+
+        // new remote syntax
+        // TODO(smendon): the error messages produced by this are not quite right
+        // the old options were specified globally, while the new options are per-host
+        // the new options are also different types
+        check_deprecated!(config_file, remote_topgrades, destination , remotes);
+        check_deprecated!(config_file, remote_topgrade_path, topgrade_path, remotes);
+        check_deprecated!(config_file, ssh_arguments, ssh_arguments, remotes);
 
         let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
