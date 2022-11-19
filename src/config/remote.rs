@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq, Default)]
@@ -119,6 +121,48 @@ mod tests {
             Common {
                 ssh_arguments: Some(vec![String::from("-o"), String::from("ConnectTimeout=2")]),
                 topgrade_path: Some(String::from(".cargo/bin/topgrade"))
+            }
+        );
+    }
+
+    #[test]
+    fn test_deprecated_and_new() {
+        let config: MockConfig = toml::from_str(
+            r#"
+            remote_topgrades = ["toothless", "pi"]
+            remote_topgrade_path = ".cargo/bin/topgrade"
+
+            [remote]
+            ssh_arguments = ["-o", "ConnectTimeout=2"]
+
+            [[remote.hosts]]
+            destination = "toothless"
+            topgrade_path = ".local/bin/topgrade"
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            config,
+            MockConfig {
+                deprecated: Some(Deprecated {
+                    remote_topgrades: vec![String::from("toothless"), String::from("pi")],
+                    remote_topgrade_path: Some(String::from(".cargo/bin/topgrade")),
+                    ssh_arguments: None,
+                }),
+                remote: Some(Remote {
+                    hosts: vec![Host {
+                        destination: String::from("toothless"),
+                        common: Common {
+                            ssh_arguments: None,
+                            topgrade_path: Some(String::from(".local/bin/topgrade")),
+                        }
+                    }],
+                    common: Common {
+                        ssh_arguments: Some(vec![String::from("-o"), String::from("ConnectTimeout=2")]),
+                        topgrade_path: None
+                    },
+                })
             }
         );
     }
