@@ -1,34 +1,32 @@
-use std::str::FromStr;
-
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq, Default)]
 pub struct Common {
-    ssh_arguments: Option<Vec<String>>,
-    topgrade_path: Option<String>,
+    pub ssh_arguments: Option<Vec<String>>,
+    pub topgrade_path: Option<String>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Deprecated {
-    remote_topgrades: Vec<String>,
-    ssh_arguments: Option<String>,
-    remote_topgrade_path: Option<String>,
+    pub remote_topgrades: Vec<String>,
+    pub ssh_arguments: Option<String>,
+    pub remote_topgrade_path: Option<String>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Default)]
 pub struct Remote {
-    hosts: Vec<Host>,
+    pub hosts: Vec<Host>,
 
     #[serde(flatten)]
-    common: Common,
+    pub common: Common,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Default)]
 pub struct Host {
-    destination: String,
+    pub destination: String,
 
     #[serde(flatten)]
-    common: Common,
+    pub common: Common,
 }
 
 #[cfg(test)]
@@ -117,12 +115,19 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            config.remote.unwrap().common,
-            Common {
-                ssh_arguments: Some(vec![String::from("-o"), String::from("ConnectTimeout=2")]),
-                topgrade_path: Some(String::from(".cargo/bin/topgrade"))
+            config.remote.unwrap(),
+            Remote {
+                hosts: vec![Host {
+                    destination: String::from("foo"),
+                    ..Host::default()
+                }],
+                common: Common {
+                    ssh_arguments: Some(vec![String::from("-o"), String::from("ConnectTimeout=2")]),
+                    topgrade_path: Some(String::from(".cargo/bin/topgrade"))
+                },
             }
         );
+        assert_eq!(config.deprecated, None);
     }
 
     #[test]

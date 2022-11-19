@@ -18,6 +18,7 @@ use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
 use sys_info::hostname;
 use which_crate::which;
 
+use self::remote::Deprecated;
 use self::remote::Remote;
 
 use super::utils::editor;
@@ -267,8 +268,9 @@ pub struct Vim {
     force_plug_update: Option<bool>,
 }
 
+// TODO(smendon):
+// this way we can't use deny unknown fields, so is there a more ergonomic way to accomplish this?
 #[derive(Deserialize, Default, Debug)]
-#[serde(deny_unknown_fields)]
 /// Configuration file
 pub struct ConfigFile {
     pre_commands: Option<Commands>,
@@ -278,9 +280,12 @@ pub struct ConfigFile {
     predefined_git_repos: Option<bool>,
     disable: Option<Vec<Step>>,
     ignore_failures: Option<Vec<Step>>,
-    remotes: Option<Vec<Remote>>,
-    remote_topgrades: Option<Vec<String>>,
-    remote_topgrade_path: Option<String>,
+    remote: Option<Remote>,
+    #[serde(flatten)]
+    deprecated_remote: Option<remote::Deprecated>,
+    // remotes: Option<Vec<Remote>>,
+    // remote_topgrades: Option<Vec<String>>,
+    // remote_topgrade_path: Option<String>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
     tmux_arguments: Option<String>,
@@ -538,9 +543,9 @@ impl Config {
         // TODO(smendon): the error messages produced by this are not quite right
         // the old options were specified globally, while the new options are per-host
         // the new options are also different types
-        check_deprecated!(config_file, remote_topgrades, destination , remotes);
-        check_deprecated!(config_file, remote_topgrade_path, topgrade_path, remotes);
-        check_deprecated!(config_file, ssh_arguments, ssh_arguments, remotes);
+        check_deprecated!(config_file, deprecated_remote, destination, remotes);
+        // check_deprecated!(config_file, remote_topgrade_path, topgrade_path, remotes);
+        // check_deprecated!(config_file, ssh_arguments, ssh_arguments, remotes);
 
         let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
@@ -627,19 +632,33 @@ impl Config {
     }
 
     /// List of remote hosts to run Topgrade in
-    pub fn remote_topgrades(&self) -> &Option<Vec<String>> {
-        &self.config_file.remote_topgrades
-    }
+    // pub fn remote_topgrades(&self) -> &Option<Vec<String>> {
+    //     if self.config_file.deprecated_remote.is_some() {
+    //         &Some(self.config_file.deprecated_remote.as_ref().unwrap().remote_topgrades)
+    //     } else {
+    //         &None
+    //     }
 
-    /// Path to Topgrade executable used for all remote hosts
-    pub fn remote_topgrade_path(&self) -> &str {
-        self.config_file.remote_topgrade_path.as_deref().unwrap_or("topgrade")
-    }
+    //     // match self.config_file.deprecated_remote {
+    //     //     Some(x) => Some(x.remote_topgrades),
+    //     //     _ => &None,
+    //     // }
+    //     // &self.config_file.deprecated_remote
+    // }
+
+    // /// Path to Topgrade executable used for all remote hosts
+    // pub fn remote_topgrade_path(&self) -> &str {
+    //     match self.config_file.deprecated_remote {
+    //         Some(x) => x.remote_topgrade_path.as_deref().unwrap_or("topgrade"),
+    //         _ => "topgrade",
+    //     }
+    //     // self.config_file.remote_topgrade_path.as_deref().unwrap_or("topgrade")
+    // }
 
     /// Extra SSH arguments
-    pub fn ssh_arguments(&self) -> &Option<String> {
-        &self.config_file.ssh_arguments
-    }
+    // pub fn ssh_arguments(&self) -> &Option<String> {
+    //     &self.config_file.ssh_arguments
+    // }
 
     /// Extra Git arguments
     pub fn git_arguments(&self) -> &Option<String> {

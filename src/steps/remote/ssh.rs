@@ -1,10 +1,27 @@
 use anyhow::Result;
 
-use crate::{error::SkipStep, execution_context::ExecutionContext, terminal::print_separator, utils};
+use crate::{error::SkipStep, execution_context::ExecutionContext, terminal::print_separator, utils, config::remote::Remote};
 
 fn prepare_async_ssh_command(args: &mut Vec<&str>) {
     args.insert(0, "ssh");
     args.push("--keep");
+}
+
+pub fn make_ssh_command(remote: &Remote) -> String {
+    
+    // TODO(smendon): ergonomic way of mixing common, remote settings
+    // and building the ssh command out
+
+    let common = &remote.common;
+    if let Some(ssh_args) = &common.ssh_arguments {
+
+    }
+
+    if let Some(topgrade_path) = &common.topgrade_path {
+
+    }
+
+    String::new()
 }
 
 pub fn ssh_step(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
